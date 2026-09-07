@@ -1,0 +1,26 @@
+{
+  "name": "3-tier-architecture",
+  "version": "1.0.0",
+  "description": "3-Tier Architecture demonstration with Frontend, Auth Backend, and Core Backend backed by MySQL",
+  "main": "start-all.js",
+  "scripts": {
+    "db:init": "node scripts/init-db.js",
+    "start": "node start-all.js",
+    "dev": "node start-all.js"
+  },
+  "keywords": [
+    "3-tier",
+    "architecture",
+    "microservices",
+    "authentication",
+    "mysql",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.4.7",
+    "mysql2": "^3.12.0"
+  }
+}

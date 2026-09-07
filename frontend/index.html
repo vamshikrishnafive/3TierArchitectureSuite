@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3-Tier Decoupled Architecture | Auth, Core & MySQL</title>
+  <meta name="description" content="A demonstration of a 3-tier decoupled architecture: Frontend, Node.js Auth Backend with MySQL, and Node.js Core Backend with MySQL.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar" id="app-navbar">
+    <a href="#dashboard" class="brand-wrapper" id="nav-brand">
+      <div class="brand-icon">3T</div>
+      <div>
+        <div class="brand-title">3-Tier Architecture Suite</div>
+      </div>
+      <span class="brand-badge">Decoupled Microservices</span>
+    </a>
+
+    <div class="nav-center">
+      <div id="status-auth-server" class="status-pill">
+        <span class="dot"></span> Auth Tier: Connecting...
+      </div>
+      <div id="status-core-server" class="status-pill">
+        <span class="dot"></span> Core Tier: Connecting...
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <div id="nav-auth-section">
+        <a href="#login" class="nav-link" data-view="login" id="nav-login-link">Login</a>
+        <a href="#register" class="btn-primary" data-view="register" id="nav-register-link">Register</a>
+      </div>
+      <div id="nav-user-section" style="display: none; align-items: center; gap: 0.85rem;">
+        <span id="nav-user-name" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;"></span>
+        <button id="nav-logout-btn" class="btn-danger">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- Architecture Visual Flow Map -->
+    <section class="arch-banner" id="arch-overview">
+      <div class="arch-header">
+        <h3>Architecture Dataflow & Tier Isolation</h3>
+        <span style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">
+          Dual MySQL Databases: arch_auth_db &bull; arch_core_db
+        </span>
+      </div>
+      <div class="tier-flow">
+        <!-- Tier 1: Frontend -->
+        <div class="tier-box t-front">
+          <div class="tier-badge">Tier 1: Client Layer</div>
+          <div class="tier-name">Web Application</div>
+          <div class="tier-tech">Port 3000 &bull; SPA Router</div>
+        </div>
+
+        <div class="tier-arrow">&rarr;</div>
+
+        <!-- Tier 2: Auth Backend -->
+        <div class="tier-box t-auth">
+          <div class="tier-badge">Tier 2A: Identity Provider</div>
+          <div class="tier-name">Auth Backend (Node.js)</div>
+          <div class="tier-tech">Port 5001 &bull; arch_auth_db</div>
+        </div>
+
+        <div class="tier-arrow">&rarr;</div>
+
+        <!-- Tier 3: Core Backend -->
+        <div class="tier-box t-core">
+          <div class="tier-badge">Tier 2B: Resource Service</div>
+          <div class="tier-name">Core Backend (Node.js)</div>
+          <div class="tier-tech">Port 5002 &bull; arch_core_db</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 1: LOGIN PAGE -->
+    <section id="view-login" class="view-section auth-wrapper" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">Welcome Back</h1>
+          <p class="card-subtitle">Authenticate against the dedicated Auth Backend (Port 5001)</p>
+        </div>
+
+        <!-- Demo Account Shortcut -->
+        <div class="demo-box">
+          <div class="demo-box-text">
+            <strong>Quick Demo:</strong> demo_user / Password123!
+          </div>
+          <button type="button" id="demo-credentials-btn" class="demo-box-btn">Auto-Fill</button>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="login-alert" style="display: none;"></div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="login-username" class="form-label">Username or Email</label>
+            <input type="text" id="login-username" class="form-input" placeholder="e.g. demo_user or user@example.com" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password</label>
+            <input type="password" id="login-password" class="form-input" placeholder="Enter your password" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" id="login-submit-btn" class="btn-primary btn-full">
+            Sign In to Dashboard
+          </button>
+        </form>
+
+        <div class="card-footer">
+          Don't have an account? <a href="#register" id="goto-register-link">Register an account</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: REGISTRATION PAGE -->
+    <section id="view-register" class="view-section auth-wrapper" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">Create Account</h1>
+          <p class="card-subtitle">Directly registers user credentials into <code>arch_auth_db</code></p>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="register-alert" style="display: none;"></div>
+
+        <form id="register-form">
+          <div class="form-group">
+            <label for="reg-fullname" class="form-label">Full Name</label>
+            <input type="text" id="reg-fullname" class="form-input" placeholder="e.g. Ada Lovelace" required>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-username" class="form-label">Username</label>
+            <input type="text" id="reg-username" class="form-input" placeholder="e.g. adalovelace" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="reg-email" class="form-label">Email Address</label>
+            <input type="email" id="reg-email" class="form-input" placeholder="e.g. ada@computing.org" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password" class="form-label">Password</label>
+            <input type="password" id="reg-password" class="form-input" placeholder="Minimum 6 characters" required autocomplete="new-password">
+          </div>
+
+          <div class="form-group">
+            <label for="reg-confirm-password" class="form-label">Confirm Password</label>
+            <input type="password" id="reg-confirm-password" class="form-input" placeholder="Re-enter password" required autocomplete="new-password">
+          </div>
+
+          <button type="submit" id="register-submit-btn" class="btn-primary btn-full">
+            Create Account
+          </button>
+        </form>
+
+        <div class="card-footer">
+          Already have an account? <a href="#login" id="goto-login-link">Sign In</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: DASHBOARD LANDING PAGE -->
+    <section id="view-dashboard" class="view-section" style="display: none;">
+      <!-- Dashboard Alert -->
+      <div id="dashboard-alert" style="display: none;"></div>
+
+      <div class="dashboard-grid">
+        <!-- Sidebar: Authenticated Profile -->
+        <aside class="profile-card">
+          <div class="profile-avatar" id="dash-user-avatar">👤</div>
+          <h2 class="profile-name" id="dash-user-name">Loading...</h2>
+          <span class="profile-badge" id="dash-user-badge">@user</span>
+          <p id="dash-user-email" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">user@example.com</p>
+
+          <div class="profile-meta-item">
+            <span class="profile-meta-label">Assigned Role</span>
+            <span class="profile-meta-val" id="dash-user-role">Engineer</span>
+          </div>
+          <div class="profile-meta-item">
+            <span class="profile-meta-label">Department</span>
+            <span class="profile-meta-val" id="dash-user-dept">Architecture</span>
+          </div>
+          <div class="profile-meta-item">
+            <span class="profile-meta-label">Core Database</span>
+            <span class="profile-meta-val" style="color: #a78bfa; font-family: var(--font-mono); font-size: 0.75rem;">arch_core_db</span>
+          </div>
+          <div class="profile-meta-item">
+            <span class="profile-meta-label">Auth Database</span>
+            <span class="profile-meta-val" style="color: #38bdf8; font-family: var(--font-mono); font-size: 0.75rem;">arch_auth_db</span>
+          </div>
+
+          <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <button id="refresh-dashboard-btn" class="btn-secondary" style="width: 100%; justify-content: center;">
+              🔄 Refresh Core Data
+            </button>
+            <button id="logout-btn" class="btn-danger" style="width: 100%; justify-content: center;">
+              Revoke Session & Logout
+            </button>
+          </div>
+        </aside>
+
+        <!-- Main Dashboard Content -->
+        <div class="dashboard-main" id="dashboard-content">
+          
+          <!-- Real-time Metrics from Core Backend -->
+          <div class="metrics-row">
+            <div class="metric-card">
+              <div class="metric-title">API Hits (Core DB)</div>
+              <div class="metric-value" id="metric-api-calls">-</div>
+              <div class="metric-sub">Queries to Port 5002</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-title">Active Services</div>
+              <div class="metric-value" id="metric-projects">3 / 3</div>
+              <div class="metric-sub">Front, Auth, Core</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-title">Architecture</div>
+              <div class="metric-value" id="metric-tier-status" style="font-size: 1.15rem; color: #34d399;">Decoupled</div>
+              <div class="metric-sub">JWT Handshake Verified</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-title">Total Core Events</div>
+              <div class="metric-value" id="metric-total-activities">-</div>
+              <div class="metric-sub">Logged in arch_core_db</div>
+            </div>
+          </div>
+
+          <!-- Activity Feed & Interactive Test Action -->
+          <div class="dash-content-grid">
+            <!-- Feed Panel -->
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Core Backend Audit Trail</h3>
+                <span style="font-size: 0.7rem; color: var(--text-dim); font-family: var(--font-mono);">arch_core_db.activities</span>
+              </div>
+              <div class="activity-feed" id="activities-list">
+                <div class="spinner" style="margin: 2rem auto;"></div>
+              </div>
+            </div>
+
+            <!-- Action Dispatcher Panel -->
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Simulate Core Tier Activity</h3>
+                <span style="font-size: 0.7rem; color: var(--text-dim); font-family: var(--font-mono);">POST /api/core/activity</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                Trigger a write transaction to the isolated <strong>Core Backend database (arch_core_db)</strong> while authenticated via JWT from the <strong>Auth Backend</strong>.
+              </p>
+              <form id="activity-form">
+                <div class="form-group">
+                  <label for="activity-type" class="form-label">Action Event Type</label>
+                  <input type="text" id="activity-type" class="form-input" placeholder="e.g. TIER_VALIDATION_EVENT" required>
+                </div>
+                <div class="form-group">
+                  <label for="activity-desc" class="form-label">Event Description</label>
+                  <input type="text" id="activity-desc" class="form-input" placeholder="e.g. Tested cross-service authenticated request." required>
+                </div>
+                <button type="submit" id="activity-submit-btn" class="btn-primary" style="width: 100%; justify-content: center;">
+                  Dispatch Event to Core DB
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Application Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
